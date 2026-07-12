@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: 321-bagla
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: DISABLE_LOCAL_HTTPS
+        value: "1"

@@ -1,0 +1,15 @@
+{
+  "name": "321-bagla",
+  "version": "2.0.0",
+  "description": "321 BAĞLA! - Online 2 Oyunculu Futbol Bağlantı Oyunu",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.21.0"
+  }
+}

@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>321 BAĞLA! ⚽ Online Futbol Oyunu</title>
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&display=swap');
+
+        :root {
+            --ink: #17253d;
+            --paper: #fffdf6;
+            --grass: #16a34a;
+            --grass-dark: #15803d;
+            --grass-soft: #e3f8ea;
+            --p1: #16a34a;
+            --p1-soft: #e3f8ea;
+            --p2: #ff4d6d;
+            --p2-soft: #ffe6ec;
+            --sky: #3a86ff;
+            --sky-soft: #e1ecff;
+            --sun: #ffd60a;
+            --sun-soft: #fff6d6;
+            --orange: #fb8500;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --border: 3px solid var(--ink);
+            --shadow: 4px 4px 0 var(--ink);
+            --radius: 16px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Baloo 2', 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--paper);
+            /* çim sahası şeritleri */
+            background-image: repeating-linear-gradient(90deg, rgba(22,163,74,0.05) 0 90px, transparent 90px 180px);
+            color: var(--ink);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* köşelerde dev toplar */
+        body::before, body::after {
+            content: "⚽";
+            position: fixed;
+            font-size: 200px;
+            opacity: 0.06;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::before { top: -50px; left: -55px; transform: rotate(-15deg); }
+        body::after { bottom: -60px; right: -45px; transform: rotate(20deg); }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.4rem;
+            font-weight: 800;
+            margin-bottom: 2px;
+            letter-spacing: 0.5px;
+            background: linear-gradient(90deg, var(--grass), var(--sky));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h1 .ball { -webkit-text-fill-color: initial; }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px; height: 1px;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+        }
+
+        .site-logo {
+            display: block;
+            margin: 0 auto 10px;
+            width: min(430px, 94%);
+            border: var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--muted);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 26px;
+        }
+
+        /* Screens */
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        /* Connection banner */
+        .conn-banner {
+            display: none;
+            text-align: center;
+            padding: 12px;
+            border-radius: var(--radius);
+            margin-bottom: 15px;
+            font-weight: 700;
+            background: var(--sun);
+            color: var(--ink);
+            border: var(--border);
+            box-shadow: var(--shadow);
+        }
+
+        .conn-banner.show { display: block; }
+
+        /* Lobby */
+        #lobby-screen { text-align: center; padding-top: 10px; }
+
+        .lobby-box {
+            background: #fff;
+            border: var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            max-width: 480px;
+            margin: 0 auto 24px;
+        }
+
+        .lobby-box h3 { margin-bottom: 15px; color: var(--sky); font-size: 1.3rem; }
+
+        .room-code {
+            font-size: 3rem;
+            font-weight: 800;
+            letter-spacing: 12px;
+            color: var(--grass);
+            margin: 15px 0;
+            text-shadow: 3px 3px 0 var(--grass-soft);
+        }
+
+        .share-link-row { display: flex; gap: 8px; margin: 15px 0; }
+
+        .share-link {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid var(--line);
+            background: #fff;
+            color: var(--sky);
+            font-size: 0.9rem;
+            font-weight: 600;
+            outline: none;
+        }
+
+        .waiting-text { color: var(--muted); margin-top: 15px; font-weight: 600; }
+
+        .join-code-row { display: flex; gap: 8px; margin-top: 14px; justify-content: center; }
+
+        .join-code-input {
+            width: 160px;
+            padding: 12px;
+            border-radius: 12px;
+            border: var(--border);
+            background: #fff;
+            color: var(--ink);
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            outline: none;
+        }
+
+        .join-code-input:focus { border-color: var(--sky); }
+
+        .lobby-error { color: var(--p2); margin-top: 12px; font-weight: 700; }
+
+        .you-badge {
+            display: inline-block;
+            background: var(--sky-soft);
+            color: var(--sky);
+            border: 2px solid var(--sky);
+            border-radius: 999px;
+            padding: 2px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        /* Team Selection */
+        .players-row { display: flex; gap: 20px; margin-bottom: 20px; }
+
+        .player-column {
+            flex: 1;
+            background: #fff;
+            border-radius: var(--radius);
+            padding: 15px;
+            border: 3px solid var(--p1);
+            box-shadow: 4px 4px 0 var(--p1);
+        }
+
+        .player-column.p2 { border-color: var(--p2); box-shadow: 4px 4px 0 var(--p2); }
+
+        .player-column h3 { text-align: center; margin-bottom: 10px; font-size: 1.1rem; }
+
+        .p1 h3 { color: var(--grass-dark); }
+        .p2 h3 { color: var(--p2); }
+
+        .selected-team {
+            background: var(--grass-soft);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+        }
+
+        .p2 .selected-team { background: var(--p2-soft); }
+
+        .selected-team.empty {
+            background: #f1f5f9;
+            color: var(--muted);
+            font-weight: 500;
+            font-style: italic;
+        }
+
+        /* League filter */
+        .league-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+            justify-content: center;
+        }
+
+        .league-btn {
+            padding: 6px 16px;
+            border-radius: 999px;
+            border: 2px solid var(--ink);
+            background: #fff;
+            color: var(--ink);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .league-btn:hover { background: var(--sun-soft); transform: translateY(-2px); }
+
+        .league-btn.active {
+            background: var(--grass);
+            border-color: var(--ink);
+            color: #fff;
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        /* Team grid */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding: 6px;
+        }
+
+        .team-grid::-webkit-scrollbar { width: 8px; }
+        .team-grid::-webkit-scrollbar-track { background: var(--grass-soft); border-radius: 4px; }
+        .team-grid::-webkit-scrollbar-thumb { background: var(--grass); border-radius: 4px; }
+
+        .team-card {
+            padding: 10px;
+            background: #fff;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-size: 0.9rem;
+            font-weight: 700;
+            border: 2px solid var(--line);
+        }
+
+        .team-card:hover {
+            border-color: var(--ink);
+            transform: translateY(-2px);
+            box-shadow: 2px 2px 0 var(--ink);
+        }
+
+        .team-card.selected-p1 {
+            border-color: var(--p1);
+            background: var(--p1-soft);
+            box-shadow: 2px 2px 0 var(--p1);
+        }
+
+        .team-card.selected-p2 {
+            border-color: var(--p2);
+            background: var(--p2-soft);
+            box-shadow: 2px 2px 0 var(--p2);
+        }
+
+        .team-card.disabled { opacity: 0.3; pointer-events: none; }
+
+        /* Turn indicator */
+        .turn-indicator {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: var(--radius);
+            font-weight: 800;
+            font-size: 1rem;
+            border: var(--border);
+        }
+
+        .turn-indicator.my-turn {
+            background: var(--grass-soft);
+            color: var(--grass-dark);
+        }
+
+        .turn-indicator.their-turn {
+            background: var(--sun-soft);
+            color: var(--orange);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 30px;
+            border: var(--border);
+            border-radius: var(--radius);
+            font-size: 1.05rem;
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s;
+            box-shadow: var(--shadow);
+        }
+
+        .btn:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: var(--shadow); }
+
+        .btn-primary { background: var(--grass); color: #fff; }
+        .btn-danger { background: var(--p2); color: #fff; }
+        .btn-outline { background: #fff; color: var(--grass-dark); }
+
+        .btn-center {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* Countdown screen */
+        #countdown-screen { text-align: center; padding-top: 80px; }
+
+        .countdown-teams {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .countdown-team {
+            background: #fff;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            padding: 20px 30px;
+            border-radius: var(--radius);
+            font-size: 1.3rem;
+            font-weight: 800;
+            min-width: 180px;
+        }
+
+        .countdown-number {
+            font-size: 8rem;
+            font-weight: 800;
+            animation: pulse 0.8s ease-in-out;
+            background: linear-gradient(90deg, var(--grass), var(--sky));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .countdown-go {
+            font-size: 6rem;
+            font-weight: 800;
+            color: var(--grass);
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        /* Answer screen */
+        #answer-screen { padding-top: 20px; }
+
+        .answer-teams {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .answer-team-box {
+            background: #fff;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            font-size: 1.2rem;
+            font-weight: 800;
+        }
+
+        .answer-vs {
+            font-size: 1.2rem;
+            color: var(--ink);
+            font-weight: 800;
+            background: var(--sun);
+            border: var(--border);
+            border-radius: 50%;
+            width: 54px;
+            height: 54px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .answer-section { display: flex; gap: 20px; margin-bottom: 20px; }
+
+        .answer-column {
+            flex: 1;
+            background: #fff;
+            border: 3px solid var(--line);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+
+        .answer-column h3 { text-align: center; margin-bottom: 15px; }
+
+        .answer-input-group { display: flex; gap: 8px; }
+
+        .answer-input {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 2px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+            font-size: 1rem;
+            font-weight: 600;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .answer-input:focus { border-color: var(--sky); }
+        .answer-input::placeholder { color: #a3b0c2; font-weight: 500; }
+
+        .submit-btn {
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 2px solid var(--ink);
+            font-weight: 800;
+            font-family: inherit;
+            cursor: pointer;
+            font-size: 1rem;
+            white-space: nowrap;
+            box-shadow: 2px 2px 0 var(--ink);
+            transition: all 0.15s;
+        }
+
+        .submit-btn:hover:not(:disabled) { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+
+        .submit-btn.p1-btn { background: var(--p1); color: #fff; }
+        .submit-btn.p2-btn { background: var(--p2); color: #fff; }
+
+        .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .mic-btn {
+            border: 2px solid var(--ink);
+            border-radius: 12px;
+            background: var(--sun);
+            padding: 0 14px;
+            font-size: 1.25rem;
+            cursor: pointer;
+            box-shadow: 2px 2px 0 var(--ink);
+            transition: all 0.15s;
+        }
+
+        .mic-btn:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+
+        .mic-btn.listening {
+            background: var(--p2);
+            animation: micpulse 1s ease-in-out infinite;
+        }
+
+        @keyframes micpulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+
+        .mic-hint {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-align: center;
+            margin-top: 6px;
+        }
+
+        .voice-link-note {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-top: 10px;
+        }
+
+        .voice-link-note a { color: var(--sky); word-break: break-all; }
+
+        .opponent-waiting {
+            text-align: center;
+            color: var(--muted);
+            font-style: italic;
+            font-weight: 600;
+            padding: 12px;
+        }
+
+        /* Timer */
+        .timer {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin: 0 auto 20px;
+            color: var(--sky);
+            background: #fff;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            border-radius: 999px;
+            width: fit-content;
+            padding: 2px 30px;
+        }
+
+        .timer.warning { color: var(--orange); }
+        .timer.danger { color: var(--p2); }
+
+        /* Result screen */
+        #result-screen { text-align: center; padding-top: 40px; }
+
+        .result-title { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; }
+
+        .result-winner {
+            font-size: 1.2rem;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .result-scoreline {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin: 12px 0;
+        }
+
+        .result-answer {
+            background: #fff;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            display: inline-block;
+            padding: 15px 30px;
+            border-radius: var(--radius);
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .common-players-title {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .common-players-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .common-player-chip {
+            background: #fff;
+            border: 2px solid var(--line);
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        /* Loading */
+        .loading { text-align: center; padding: 40px; color: var(--muted); font-weight: 600; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--grass-soft);
+            border-top-color: var(--grass);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .players-row, .answer-section, .countdown-teams { flex-direction: column; }
+            .team-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+            h1 { font-size: 1.6rem; }
+            .countdown-number { font-size: 5rem; }
+            .room-code { font-size: 2rem; letter-spacing: 8px; }
+            body::before, body::after { font-size: 120px; }
+        }
+
+        /* Search */
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 2px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            margin-bottom: 12px;
+            outline: none;
+        }
+
+        .search-box:focus { border-color: var(--sky); }
+        .search-box::placeholder { color: #a3b0c2; font-weight: 500; }
+
+        .verification-status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 12px;
+            margin-top: 10px;
+            font-weight: 700;
+        }
+
+        .verification-status.checking { background: var(--sky-soft); color: var(--sky); }
+        .verification-status.correct { background: var(--p1-soft); color: var(--grass-dark); }
+        .verification-status.wrong { background: var(--p2-soft); color: #e11d48; }
+
+        .rules-box {
+            background: #fff;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 25px;
+            border-left: 8px solid var(--grass);
+        }
+
+        .rules-box h3 { color: var(--grass-dark); margin-bottom: 10px; font-size: 1.2rem; }
+
+        .rules-box ul { list-style: none; padding: 0; }
+
+        .rules-box li { padding: 5px 0; color: #475569; font-weight: 600; font-size: 0.92rem; }
+
+        .rules-box li::before { content: "⚽ "; }
+
+        .skip-btn {
+            background: #fff;
+            border: 2px solid var(--muted);
+            color: var(--muted);
+            padding: 8px 16px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: inherit;
+            transition: all 0.15s;
+        }
+
+        .skip-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+        .score-board {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .score-item {
+            text-align: center;
+            background: #fff;
+            border: var(--border);
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            padding: 8px 22px;
+            min-width: 110px;
+        }
+
+        .score-item .score-label { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+
+        .score-item .score-value { font-size: 1.9rem; font-weight: 800; }
+
+        .score-item.p1 .score-value { color: var(--p1); }
+        .score-item.p2 .score-value { color: var(--p2); }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="visually-hidden">321 BAĞLA!</h1>
+        <img src="/logo.png" alt="321 BAĞLA! logosu" class="site-logo">
+        <p class="subtitle">Iki takimi baglayan futbolcuyu bul! <span id="room-badge" style="display:none"></span></p>
+
+        <div class="conn-banner" id="conn-banner"></div>
+
+        <!-- LOBBY SCREEN -->
+        <div id="lobby-screen" class="screen active">
+            <div class="rules-box" style="text-align:left">
+                <h3>Nasil Oynanir?</h3>
+                <ul>
+                    <li>Bir oyuncu oda kurar, linki rakibine gonderir</li>
+                    <li>Herkes kendi takimini GIZLICE secer - rakip goremez</li>
+                    <li>Baslat'a basilinca takimlar aciklanir ve geri sayim baslar</li>
+                    <li>2000 yilindan sonra her iki takimda da oynamis bir futbolcu adi yazin</li>
+                    <li>Ad-soyad yazin: tek basina ayirt edici olmayan isimler kabul edilmez</li>
+                    <li>Dogru cevabi ilk veren oyuncu raundi kazanir!</li>
+                </ul>
+            </div>
+
+            <div class="lobby-box" id="lobby-create">
+                <h3>Online Oyna</h3>
+                <button class="btn btn-primary" id="create-room-btn">Oda Kur</button>
+                <div class="join-code-row">
+                    <input type="text" class="join-code-input" id="join-code" placeholder="KOD" maxlength="4">
+                    <button class="btn btn-outline" id="join-room-btn">Katil</button>
+                </div>
+                <div class="lobby-error" id="lobby-error"></div>
+            </div>
+
+            <div class="lobby-box" id="lobby-waiting" style="display:none">
+                <h3>Oda Kuruldu!</h3>
+                <div>Oda Kodu:</div>
+                <div class="room-code" id="room-code-display"></div>
+                <div>Bu linki rakibine gonder:</div>
+                <div class="share-link-row">
+                    <input type="text" class="share-link" id="share-link" readonly>
+                    <button class="btn btn-outline" id="copy-link-btn" style="padding:8px 16px">Kopyala</button>
+                </div>
+                <div class="voice-link-note" id="voice-link-note" style="display:none"></div>
+                <div class="waiting-text">
+                    <div class="spinner" style="width:24px;height:24px;border-width:3px;margin-bottom:8px"></div>
+                    Rakip bekleniyor...
+                </div>
+            </div>
+        </div>
+
+        <!-- SETUP SCREEN -->
+        <div id="setup-screen" class="screen">
+            <div class="score-board">
+                <div class="score-item p1">
+                    <div class="score-label" id="label-p1">Oyuncu 1</div>
+                    <div class="score-value" id="score-p1">0</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">Raund</div>
+                    <div class="score-value" id="round-num" style="color:#3a86ff">1</div>
+                </div>
+                <div class="score-item p2">
+                    <div class="score-label" id="label-p2">Oyuncu 2</div>
+                    <div class="score-value" id="score-p2">0</div>
+                </div>
+            </div>
+
+            <div class="turn-indicator my-turn" id="turn-indicator">
+                Sira sende - Takim sec
+            </div>
+
+            <div class="players-row">
+                <div class="player-column p1">
+                    <h3 id="col-title-p1">Oyuncu 1</h3>
+                    <div class="selected-team empty" id="p1-team">Takim secilmedi</div>
+                </div>
+                <div class="player-column p2">
+                    <h3 id="col-title-p2">Oyuncu 2</h3>
+                    <div class="selected-team empty" id="p2-team">Takim secilmedi</div>
+                </div>
+            </div>
+
+            <input type="text" class="search-box" id="team-search" placeholder="Takim ara...">
+
+            <div class="league-filter" id="league-filter"></div>
+            <div class="team-grid" id="team-grid"></div>
+
+            <div class="btn-center">
+                <button class="btn btn-outline" id="random-btn">Rastgele Sec</button>
+                <button class="btn btn-primary" id="start-btn" disabled>Baslat!</button>
+            </div>
+        </div>
+
+        <!-- COUNTDOWN SCREEN -->
+        <div id="countdown-screen" class="screen">
+            <div class="countdown-teams">
+                <div class="countdown-team" id="cd-team1" style="color:#15803d"></div>
+                <div class="countdown-team" id="cd-team2" style="color:#ff4d6d"></div>
+            </div>
+            <div id="countdown-display"></div>
+        </div>
+
+        <!-- ANSWER SCREEN -->
+        <div id="answer-screen" class="screen">
+            <div class="answer-teams">
+                <div class="answer-team-box" id="ans-team1"></div>
+                <div class="answer-vs">VS</div>
+                <div class="answer-team-box" id="ans-team2"></div>
+            </div>
+
+            <div class="timer" id="timer">60</div>
+
+            <div class="answer-section">
+                <div class="answer-column" id="my-column">
+                    <h3 id="my-column-title">Sen</h3>
+                    <div class="answer-input-group">
+                        <input type="text" class="answer-input" id="my-answer" placeholder="Futbolcu adi..." autocomplete="off">
+                        <button class="mic-btn" id="mic-btn" title="Sesli soyle">🎤</button>
+                        <button class="submit-btn p1-btn" id="my-submit">Gonder</button>
+                    </div>
+                    <div class="mic-hint" id="mic-hint"></div>
+                    <div class="verification-status" id="my-status" style="display:none"></div>
+                </div>
+                <div class="answer-column" id="opp-column">
+                    <h3 id="opp-column-title">Rakip</h3>
+                    <div class="opponent-waiting" id="opp-waiting">Rakip dusunuyor...</div>
+                    <div class="verification-status" id="opp-status" style="display:none"></div>
+                </div>
+            </div>
+
+            <div class="btn-center">
+                <button class="skip-btn" id="skip-btn">Bu raundi atla (kimse bilmedi)</button>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="result-screen" class="screen">
+            <div id="result-content"></div>
+            <div class="common-players-title" id="common-title"></div>
+            <div class="common-players-list" id="common-list"></div>
+            <div class="loading" id="common-loading" style="display:none">
+                <div class="spinner"></div>
+                <p>Ortak oyuncular arastiriliyor...</p>
+            </div>
+            <div class="btn-center">
+                <button class="btn btn-primary" id="next-round-btn">Sonraki Raund</button>
+                <button class="btn btn-outline" id="new-game-btn">Yeni Oyun</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============ DATA ============
+        const TEAMS = {
+            "Turk Super Lig": [
+                { name: "Alanyaspor", id: "135676" },
+                { name: "Antalyaspor", id: "133799" },
+                { name: "Besiktas", id: "133794" },
+                { name: "Eyupspor", id: "138977" },
+                { name: "Fenerbahce", id: "133807" },
+                { name: "Galatasaray", id: "133804" },
+                { name: "Gaziantep", id: "138092" },
+                { name: "Goztepe", id: "135891" },
+                { name: "Istanbul Basaksehir", id: "134589" },
+                { name: "Kasimpasa", id: "133834" },
+                { name: "Kayserispor", id: "133802" },
+                { name: "Kocaelispor", id: "133870" },
+                { name: "Konyaspor", id: "133835" },
+                { name: "Rizespor", id: "133885" },
+                { name: "Samsunspor", id: "133797" },
+                { name: "Trabzonspor", id: "133796" },
+                { name: "Sivasspor", id: "133836" },
+                { name: "Adana Demirspor", id: "133833" }
+            ],
+            "Premier League": [
+                { name: "Arsenal", id: "133604" },
+                { name: "Aston Villa", id: "133601" },
+                { name: "Bournemouth", id: "134301" },
+                { name: "Brentford", id: "134355" },
+                { name: "Brighton", id: "133619" },
+                { name: "Chelsea", id: "133610" },
+                { name: "Crystal Palace", id: "133632" },
+                { name: "Everton", id: "133615" },
+                { name: "Fulham", id: "133600" },
+                { name: "Liverpool", id: "133602" },
+                { name: "Manchester City", id: "133613" },
+                { name: "Manchester United", id: "133612" },
+                { name: "Newcastle United", id: "134777" },
+                { name: "Nottingham Forest", id: "133720" },
+                { name: "Tottenham", id: "133616" },
+                { name: "West Ham", id: "133614" },
+                { name: "Wolverhampton", id: "133636" },
+                { name: "Leicester City", id: "133617" }
+            ],
+            "La Liga": [
+                { name: "Athletic Bilbao", id: "133727" },
+                { name: "Atletico Madrid", id: "133729" },
+                { name: "Barcelona", id: "133739" },
+                { name: "Celta Vigo", id: "133937" },
+                { name: "Espanyol", id: "133734" },
+                { name: "Getafe", id: "133731" },
+                { name: "Girona", id: "134700" },
+                { name: "Mallorca", id: "133733" },
+                { name: "Osasuna", id: "133730" },
+                { name: "Rayo Vallecano", id: "133728" },
+                { name: "Real Betis", id: "133722" },
+                { name: "Real Madrid", id: "133738" },
+                { name: "Real Sociedad", id: "133723" },
+                { name: "Sevilla", id: "133724" },
+                { name: "Valencia", id: "133735" },
+                { name: "Villarreal", id: "133726" }
+            ],
+            "Serie A": [
+                { name: "AC Milan", id: "133667" },
+                { name: "Atalanta", id: "134782" },
+                { name: "Bologna", id: "134781" },
+                { name: "Fiorentina", id: "133674" },
+                { name: "Genoa", id: "133675" },
+                { name: "Inter Milan", id: "133681" },
+                { name: "Juventus", id: "133676" },
+                { name: "Lazio", id: "133668" },
+                { name: "Lecce", id: "133678" },
+                { name: "Napoli", id: "133670" },
+                { name: "Roma", id: "133682" },
+                { name: "Torino", id: "133687" },
+                { name: "Udinese", id: "133679" },
+                { name: "Sassuolo", id: "133701" },
+                { name: "Parma", id: "135728" }
+            ],
+            "Bundesliga": [
+                { name: "Bayer Leverkusen", id: "133666" },
+                { name: "Bayern Munich", id: "133664" },
+                { name: "Borussia Dortmund", id: "133650" },
+                { name: "Eintracht Frankfurt", id: "133814" },
+                { name: "Freiburg", id: "133653" },
+                { name: "Hoffenheim", id: "133657" },
+                { name: "Mainz", id: "133665" },
+                { name: "RB Leipzig", id: "134695" },
+                { name: "Stuttgart", id: "133660" },
+                { name: "Wolfsburg", id: "133655" },
+                { name: "Werder Bremen", id: "133662" },
+                { name: "Union Berlin", id: "134690" },
+                { name: "Borussia Monchengladbach", id: "134779" },
+                { name: "FC Koln", id: "133654" },
+                { name: "FC Augsburg", id: "133652" }
+            ],
+            "Ligue 1": [
+                { name: "Lyon", id: "133713" },
+                { name: "Marseille", id: "133707" },
+                { name: "Monaco", id: "133823" },
+                { name: "Nice", id: "133712" },
+                { name: "Paris SG", id: "133714" },
+                { name: "Lille", id: "133711" },
+                { name: "Lens", id: "133822" },
+                { name: "Rennes", id: "133719" },
+                { name: "Strasbourg", id: "133882" },
+                { name: "Toulouse", id: "133703" },
+                { name: "Nantes", id: "133861" },
+                { name: "Brest", id: "133704" }
+            ],
+            "Primeira Liga": [
+                { name: "Benfica", id: "134108" },
+                { name: "FC Porto", id: "134114" },
+                { name: "Sporting CP", id: "135708" },
+                { name: "Braga", id: "134098" }
+            ],
+            "Eredivisie": [
+                { name: "Ajax", id: "133772" },
+                { name: "AZ Alkmaar", id: "133767" },
+                { name: "Feyenoord", id: "133758" },
+                { name: "PSV Eindhoven", id: "133768" }
+            ]
+        };
+
+        const API_BASE = "https://www.thesportsdb.com/api/v1/json/3";
+
+        // ============ STATE ============
+        let ws = null;
+        let myPlayer = null; // 1 veya 2
+        let roomCode = null;
+        let lanIp = null;
+        let httpsPort = null;
+
+        let game = {
+            phase: 'lobby',
+            team1: null,       // sadece takimlar acildiktan sonra dolar
+            team2: null,
+            myTeam: null,      // benim gizli secimim
+            picked: [false, false],
+            scores: [0, 0],
+            round: 1
+        };
+
+        let timerInterval = null;
+        let timeLeft = 60;
+        let myLocked = false;
+        let lastMyStatus = null;
+
+        // ============ DOM ============
+        const $ = id => document.getElementById(id);
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            $(id).classList.add('active');
+        }
+
+        function opp() { return myPlayer === 1 ? 2 : 1; }
+
+        // ============ WEBSOCKET ============
+        function connect(onOpen) {
+            const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+            ws = new WebSocket(`${proto}://${location.host}`);
+            ws.onopen = onOpen;
+            ws.onmessage = e => handleMessage(JSON.parse(e.data));
+            ws.onclose = () => {
+                showBanner('Sunucu baglantisi koptu. Sayfayi yenileyin.');
+            };
+        }
+
+        function wsSend(type, data = {}) {
+            if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type, ...data }));
+        }
+
+        function showBanner(text) {
+            const b = $('conn-banner');
+            b.textContent = text;
+            b.classList.add('show');
+        }
+
+        function hideBanner() {
+            $('conn-banner').classList.remove('show');
+        }
+
+        function handleMessage(msg) {
+            switch (msg.type) {
+                case 'room_created': {
+                    myPlayer = 1;
+                    roomCode = msg.code;
+                    $('lobby-create').style.display = 'none';
+                    $('lobby-waiting').style.display = 'block';
+                    $('room-code-display').textContent = msg.code;
+                    $('share-link').value = buildShareLink(msg.code);
+                    updateVoiceNote(msg.code);
+                    updateRoomBadge();
+                    break;
+                }
+                case 'joined': {
+                    myPlayer = msg.player;
+                    roomCode = msg.code;
+                    updateRoomBadge();
+                    applySnapshot(msg.state);
+                    break;
+                }
+                case 'opponent_joined': {
+                    hideBanner();
+                    applySnapshot(msg.state);
+                    break;
+                }
+                case 'pick_update': {
+                    game.picked = msg.picked;
+                    game.myTeam = msg.yourTeam;
+                    renderSetup();
+                    break;
+                }
+                case 'same_team': {
+                    showBanner('Ikiniz de ayni takimi sectiniz! Yeniden secin.');
+                    setTimeout(hideBanner, 4000);
+                    break;
+                }
+                case 'countdown_start': {
+                    game.team1 = msg.team1;
+                    game.team2 = msg.team2;
+                    runCountdown();
+                    break;
+                }
+                case 'answer_start': {
+                    startAnswerUI(msg.seconds);
+                    break;
+                }
+                case 'answer_status': {
+                    renderAnswerStatus(msg);
+                    break;
+                }
+                case 'verdict_request': {
+                    renderVerdictRequest(msg);
+                    break;
+                }
+                case 'round_end': {
+                    stopTimer();
+                    game.scores = msg.scores;
+                    game.team1 = msg.team1;
+                    game.team2 = msg.team2;
+                    showResult(msg);
+                    break;
+                }
+                case 'setup_reset': {
+                    game.round = msg.round;
+                    game.scores = msg.scores;
+                    game.team1 = null;
+                    game.team2 = null;
+                    game.myTeam = null;
+                    game.picked = [false, false];
+                    $('team-search').value = '';
+                    renderSetup();
+                    showScreen('setup-screen');
+                    break;
+                }
+                case 'opponent_left': {
+                    showBanner('Rakibin baglantisi koptu. Ayni linkle geri donmesini bekleyebilirsin.');
+                    break;
+                }
+                case 'join_error': {
+                    $('lobby-error').textContent = msg.message;
+                    break;
+                }
+            }
+        }
+
+        function applySnapshot(state) {
+            game.phase = state.phase;
+            game.team1 = state.team1;
+            game.team2 = state.team2;
+            game.myTeam = state.yourTeam || null;
+            game.picked = state.picked || [!!state.team1, !!state.team2];
+            game.scores = state.scores;
+            game.round = state.round;
+
+            if (state.phase === 'lobby') {
+                // Rakip henuz yok
+                $('lobby-create').style.display = 'none';
+                $('lobby-waiting').style.display = 'block';
+                $('room-code-display').textContent = roomCode;
+                $('share-link').value = buildShareLink(roomCode);
+                showScreen('lobby-screen');
+            } else if (state.phase === 'setup') {
+                renderSetup();
+                showScreen('setup-screen');
+            } else if (state.phase === 'countdown') {
+                runCountdown();
+            } else if (state.phase === 'answer') {
+                startAnswerUI(state.timeLeft || 60);
+                // Yeniden bağlananın kilit durumu ve bekleyen itiraz/onay sorusu geri gelsin
+                if (state.locked && state.locked[myPlayer - 1]) {
+                    myLocked = true;
+                    $('my-answer').disabled = true;
+                    $('my-submit').disabled = true;
+                }
+                if (state.pendingVerdict) {
+                    renderVerdictRequest({
+                        player: state.pendingVerdict.player,
+                        answer: state.pendingVerdict.answer,
+                        kind: state.pendingVerdict.kind || 'unverified'
+                    });
+                }
+            } else if (state.phase === 'result' && state.lastResult) {
+                showResult({ ...state.lastResult, scores: state.scores, round: state.round, team1: state.team1, team2: state.team2 });
+            } else {
+                renderSetup();
+                showScreen('setup-screen');
+            }
+        }
+
+        function buildShareLink(code) {
+            let host = location.hostname;
+            if ((host === 'localhost' || host === '127.0.0.1') && lanIp) host = lanIp;
+            const port = location.port ? ':' + location.port : '';
+            return `${location.protocol}//${host}${port}/?oda=${code}`;
+        }
+
+        // Mikrofon yalnızca güvenli bağlantıda çalışır; rakip için HTTPS linki
+        function updateVoiceNote(code) {
+            const note = $('voice-link-note');
+            if (!httpsPort || location.protocol === 'https:') { note.style.display = 'none'; return; }
+            let host = location.hostname;
+            if ((host === 'localhost' || host === '127.0.0.1') && lanIp) host = lanIp;
+            const link = `https://${host}:${httpsPort}/?oda=${code}`;
+            note.innerHTML = `🎤 Sesli cevap icin oyunu bu linkle acin: <a href="${link}" target="_blank">${link}</a><br>(ilk aciliste "Gelismis &gt; Devam et" ile sertifika uyarisini gecin)`;
+            note.style.display = 'block';
+        }
+
+        function updateRoomBadge() {
+            const badge = $('room-badge');
+            badge.style.display = 'inline';
+            badge.innerHTML = `<span class="you-badge">Oda: ${roomCode} | Sen: Oyuncu ${myPlayer}</span>`;
+        }
+
+        // ============ LOBBY ============
+        $('create-room-btn').addEventListener('click', () => {
+            $('lobby-error').textContent = '';
+            connect(() => wsSend('create_room'));
+        });
+
+        $('join-room-btn').addEventListener('click', joinByCode);
+        $('join-code').addEventListener('keydown', e => { if (e.key === 'Enter') joinByCode(); });
+
+        function joinByCode() {
+            const code = $('join-code').value.trim().toUpperCase();
+            if (code.length !== 4) { $('lobby-error').textContent = '4 haneli oda kodunu gir.'; return; }
+            $('lobby-error').textContent = '';
+            connect(() => wsSend('join_room', { code }));
+        }
+
+        $('copy-link-btn').addEventListener('click', () => {
+            const input = $('share-link');
+            input.select();
+            navigator.clipboard.writeText(input.value).then(() => {
+                $('copy-link-btn').textContent = 'Kopyalandi!';
+                setTimeout(() => $('copy-link-btn').textContent = 'Kopyala', 2000);
+            }).catch(() => document.execCommand('copy'));
+        });
+
+        // ============ TEAM SELECTION ============
+        let activeLeague = null;
+
+        function renderLeagueFilter() {
+            const container = $('league-filter');
+            container.innerHTML = '';
+            const allBtn = document.createElement('button');
+            allBtn.className = 'league-btn active';
+            allBtn.textContent = 'Tumu';
+            allBtn.onclick = () => filterLeague(null, allBtn);
+            container.appendChild(allBtn);
+
+            Object.keys(TEAMS).forEach(league => {
+                const btn = document.createElement('button');
+                btn.className = 'league-btn';
+                btn.textContent = league;
+                btn.onclick = () => filterLeague(league, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function filterLeague(league, btn) {
+            activeLeague = league;
+            document.querySelectorAll('.league-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            renderTeamGrid();
+        }
+
+        function renderSetup() {
+            // Skor ve raund
+            $('score-p1').textContent = game.scores[0];
+            $('score-p2').textContent = game.scores[1];
+            $('round-num').textContent = game.round;
+
+            // "Sen" etiketleri
+            $('label-p1').innerHTML = myPlayer === 1 ? 'Oyuncu 1 (Sen)' : 'Oyuncu 1';
+            $('label-p2').innerHTML = myPlayer === 2 ? 'Oyuncu 2 (Sen)' : 'Oyuncu 2';
+            $('col-title-p1').textContent = myPlayer === 1 ? 'Oyuncu 1 (Sen)' : 'Oyuncu 1 (Rakip)';
+            $('col-title-p2').textContent = myPlayer === 2 ? 'Oyuncu 2 (Sen)' : 'Oyuncu 2 (Rakip)';
+
+            // Kendi sutunum: sectigim takim. Rakip sutunu: sadece secti/secmedi bilgisi
+            const myEl = myPlayer === 1 ? $('p1-team') : $('p2-team');
+            const oppEl = myPlayer === 1 ? $('p2-team') : $('p1-team');
+            const iPicked = game.picked[myPlayer - 1];
+            const oppPicked = game.picked[opp() - 1];
+
+            if (game.myTeam) {
+                myEl.textContent = game.myTeam.name;
+                myEl.classList.remove('empty');
+            } else {
+                myEl.textContent = 'Takim secilmedi';
+                myEl.classList.add('empty');
+            }
+            if (oppPicked) {
+                oppEl.textContent = 'Secti ✓ (gizli)';
+                oppEl.classList.remove('empty');
+            } else {
+                oppEl.textContent = 'Seciyor...';
+                oppEl.classList.add('empty');
+            }
+
+            // Durum gostergesi
+            const ind = $('turn-indicator');
+            const bothPicked = iPicked && oppPicked;
+            if (bothPicked) {
+                ind.textContent = 'Ikiniz de hazir - Baslat!';
+                ind.className = 'turn-indicator my-turn';
+            } else if (!iPicked) {
+                ind.textContent = 'Takimini gizlice sec (rakip goremez)';
+                ind.className = 'turn-indicator my-turn';
+            } else {
+                ind.textContent = 'Rakibin secmesi bekleniyor...';
+                ind.className = 'turn-indicator their-turn';
+            }
+
+            $('start-btn').disabled = !bothPicked;
+            $('random-btn').disabled = false;
+
+            renderTeamGrid();
+        }
+
+        function renderTeamGrid() {
+            const container = $('team-grid');
+            const search = $('team-search').value.toLowerCase();
+            container.innerHTML = '';
+
+            const leagues = activeLeague ? { [activeLeague]: TEAMS[activeLeague] } : TEAMS;
+            const myClass = myPlayer === 2 ? 'selected-p2' : 'selected-p1';
+
+            Object.entries(leagues).forEach(([league, teams]) => {
+                teams.forEach(team => {
+                    if (search && !team.name.toLowerCase().includes(search)) return;
+
+                    const card = document.createElement('div');
+                    card.className = 'team-card';
+
+                    // Sadece kendi secimim gorunur; rakibinki gizli
+                    if (game.myTeam && game.myTeam.id === team.id) {
+                        card.classList.add(myClass);
+                    }
+
+                    card.textContent = team.name;
+                    card.onclick = () => wsSend('select_team', { team });
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        $('team-search').addEventListener('input', renderTeamGrid);
+
+        $('random-btn').addEventListener('click', () => {
+            const allTeams = Object.values(TEAMS).flat();
+            const t = allTeams[Math.floor(Math.random() * allTeams.length)];
+            wsSend('select_team', { team: t });
+        });
+
+        $('start-btn').addEventListener('click', () => wsSend('start_game'));
+
+        // ============ COUNTDOWN ============
+        function runCountdown() {
+            showScreen('countdown-screen');
+            $('cd-team1').textContent = game.team1.name;
+            $('cd-team2').textContent = game.team2.name;
+
+            const display = $('countdown-display');
+            let count = 3;
+
+            display.innerHTML = `<div class="countdown-number">${count}</div>`;
+
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    display.innerHTML = `<div class="countdown-number">${count}</div>`;
+                } else if (count === 0) {
+                    display.innerHTML = `<div class="countdown-go">BAĞLA!</div>`;
+                } else {
+                    clearInterval(interval);
+                    // Cevap ekranina gecis sunucudan gelen answer_start ile olur
+                }
+            }, 1000);
+        }
+
+        // ============ ANSWER PHASE ============
+        function startAnswerUI(seconds) {
+            showScreen('answer-screen');
+            $('ans-team1').textContent = game.team1.name;
+            $('ans-team2').textContent = game.team2.name;
+
+            // Renkler: kendi sutunun kendi rengini alsin
+            const myColor = myPlayer === 1 ? '#16a34a' : '#ff4d6d';
+            const oppColor = myPlayer === 1 ? '#ff4d6d' : '#16a34a';
+            $('my-column').style.border = `3px solid ${myColor}`;
+            $('my-column').style.boxShadow = `4px 4px 0 ${myColor}`;
+            $('opp-column').style.border = `3px solid ${oppColor}`;
+            $('opp-column').style.boxShadow = `4px 4px 0 ${oppColor}`;
+            $('my-column-title').textContent = `Sen (Oyuncu ${myPlayer})`;
+            $('my-column-title').style.color = myColor;
+            $('opp-column-title').textContent = `Rakip (Oyuncu ${opp()})`;
+            $('opp-column-title').style.color = oppColor;
+            $('my-submit').className = `submit-btn ${myPlayer === 1 ? 'p1-btn' : 'p2-btn'}`;
+
+            timeLeft = seconds;
+            myLocked = false;
+            $('my-answer').value = '';
+            $('my-answer').disabled = false;
+            $('my-submit').disabled = false;
+            $('my-status').style.display = 'none';
+            $('opp-status').style.display = 'none';
+            $('opp-waiting').style.display = 'block';
+            $('mic-hint').textContent = '';
+            if (typeof listening !== 'undefined' && listening && recognition) recognition.stop();
+
+            updateTimer();
+            stopTimer();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                if (timeLeft <= 0) stopTimer(); // raund bitisini sunucu bildirir
+            }, 1000);
+
+            $('my-answer').focus();
+        }
+
+        function stopTimer() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        }
+
+        function updateTimer() {
+            const el = $('timer');
+            el.textContent = Math.max(0, timeLeft);
+            el.className = 'timer';
+            if (timeLeft <= 10) el.classList.add('danger');
+            else if (timeLeft <= 20) el.classList.add('warning');
+        }
+
+        $('my-submit').addEventListener('click', submitMyAnswer);
+        $('my-answer').addEventListener('keydown', e => { if (e.key === 'Enter') submitMyAnswer(); });
+
+        // ============ SESLI GIRIS (Web Speech API) ============
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let listening = false;
+
+        if (SR) {
+            recognition = new SR();
+            recognition.lang = 'tr-TR';
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 1;
+
+            recognition.onresult = (e) => {
+                const text = [...e.results].map(r => r[0].transcript).join(' ').trim();
+                if (text) $('my-answer').value = text;
+            };
+
+            recognition.onend = () => setListening(false);
+
+            recognition.onerror = (e) => {
+                setListening(false);
+                if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+                    micHint(window.isSecureContext
+                        ? 'Mikrofon izni verilmedi - tarayici ayarlarindan izin ver.'
+                        : 'Mikrofon icin oyunu HTTPS linkiyle acmalisin (oda kurma ekranindaki 🎤 linki).');
+                } else if (e.error === 'no-speech') {
+                    micHint('Ses algilanamadi, tekrar dene.');
+                } else if (e.error !== 'aborted') {
+                    micHint('Sesli giris hatasi: ' + e.error);
+                }
+            };
+        } else {
+            $('mic-btn').style.display = 'none';
+        }
+
+        function setListening(on) {
+            listening = on;
+            $('mic-btn').classList.toggle('listening', on);
+            $('mic-btn').textContent = on ? '🔴' : '🎤';
+            if (on) micHint('Dinliyorum... futbolcunun adini ve soyadini soyle');
+            else if ($('mic-hint').textContent.startsWith('Dinliyorum')) micHint('');
+        }
+
+        function micHint(text) {
+            $('mic-hint').textContent = text;
+        }
+
+        $('mic-btn').addEventListener('click', () => {
+            if (!recognition || myLocked) return;
+            if (listening) { recognition.stop(); return; }
+            if (!window.isSecureContext) {
+                micHint('Mikrofon icin oyunu HTTPS linkiyle acmalisin (oda kurma ekranindaki 🎤 linki).');
+                return;
+            }
+            micHint('');
+            try { recognition.start(); setListening(true); } catch (err) { setListening(false); }
+        });
+
+        function submitMyAnswer() {
+            const answer = $('my-answer').value.trim();
+            if (!answer || myLocked) return;
+            if (listening && recognition) recognition.stop();
+            micHint('');
+            wsSend('submit_answer', { answer });
+        }
+
+        $('skip-btn').addEventListener('click', () => wsSend('skip_round'));
+
+        function renderAnswerStatus(msg) {
+            const mine = msg.player === myPlayer;
+            const statusEl = mine ? $('my-status') : $('opp-status');
+            if (!mine) $('opp-waiting').style.display = 'none';
+
+            statusEl.style.display = 'block';
+            if (mine) lastMyStatus = msg.status;
+
+            switch (msg.status) {
+                case 'checking':
+                    if (mine) {
+                        myLocked = true;
+                        $('my-answer').disabled = true;
+                        $('my-submit').disabled = true;
+                    }
+                    statusEl.className = 'verification-status checking';
+                    statusEl.textContent = mine
+                        ? 'Kontrol ediliyor...'
+                        : `Rakip cevap verdi: "${msg.answer}" - kontrol ediliyor...`;
+                    break;
+
+                case 'ambiguous':
+                    statusEl.className = 'verification-status wrong';
+                    statusEl.textContent = mine
+                        ? 'Bu isim tek basina ayirt edici degil! Futbolcunun adini VE soyadini yaz.'
+                        : `Rakibin cevabi ("${msg.answer}") yeterince ayirt edici degil - tekrar deniyor.`;
+                    break;
+
+                case 'denied':
+                    statusEl.className = 'verification-status wrong';
+                    if (mine) {
+                        statusEl.innerHTML = `
+                            Yanlis! API'ye gore bu oyuncu iki takimda da oynamamis.<br>
+                            <button class="skip-btn" style="margin-top:8px; background:#ff9800; color:#000; border:none;" id="objection-btn">Itiraz Et</button>
+                        `;
+                        const btn = statusEl.querySelector('#objection-btn');
+                        btn.onclick = () => {
+                            wsSend('objection', { answer: msg.answer });
+                            statusEl.className = 'verification-status checking';
+                            statusEl.textContent = 'Itiraz edildi - rakibin karari bekleniyor...';
+                        };
+                    } else {
+                        statusEl.textContent = `Rakibin cevabi yanlis cikti: "${msg.answer}"`;
+                    }
+                    break;
+
+                case 'rejected':
+                    statusEl.className = 'verification-status wrong';
+                    statusEl.textContent = mine ? 'Rakip cevabini reddetti!' : 'Cevabi reddettin.';
+                    if (mine) {
+                        setTimeout(() => unlockMe(), 1500);
+                    } else {
+                        setTimeout(() => {
+                            statusEl.style.display = 'none';
+                            $('opp-waiting').style.display = 'block';
+                        }, 1500);
+                    }
+                    break;
+
+                case 'unlocked':
+                    if (mine) {
+                        unlockMe();
+                    } else {
+                        statusEl.style.display = 'none';
+                        $('opp-waiting').style.display = 'block';
+                    }
+                    break;
+            }
+        }
+
+        function unlockMe() {
+            myLocked = false;
+            $('my-answer').disabled = false;
+            // Belirsiz isimde yazilani silme: oyuncu soyadini ekleyip devam edebilsin
+            if (lastMyStatus !== 'ambiguous') $('my-answer').value = '';
+            $('my-submit').disabled = false;
+            $('my-status').style.display = 'none';
+            $('my-answer').focus();
+        }
+
+        function renderVerdictRequest(msg) {
+            const iAmJudge = msg.player !== myPlayer;
+            const statusEl = iAmJudge ? $('opp-status') : $('my-status');
+            if (iAmJudge) $('opp-waiting').style.display = 'none';
+            statusEl.style.display = 'block';
+            statusEl.className = 'verification-status checking';
+
+            if (iAmJudge) {
+                const title = msg.kind === 'objection'
+                    ? `Rakip itiraz etti: <strong>${escapeHtml(msg.answer)}</strong><br><span style="font-size:0.85rem;color:#b0bec5;">Bu cevabi kabul ediyor musun?</span>`
+                    : `API dogrulayamadi: <strong>${escapeHtml(msg.answer)}</strong><br><span style="font-size:0.85rem;color:#b0bec5;">Sence bu cevap dogru mu?</span>`;
+                statusEl.innerHTML = `
+                    ${title}<br>
+                    <button class="submit-btn p1-btn" style="margin-top:8px; padding:8px 16px; font-size:0.85rem;" id="verdict-yes">${msg.kind === 'objection' ? 'Kabul' : 'Evet, Dogru'}</button>
+                    <button class="submit-btn p2-btn" style="margin-top:8px; padding:8px 16px; font-size:0.85rem; margin-left:8px;" id="verdict-no">${msg.kind === 'objection' ? 'Ret' : 'Hayir, Yanlis'}</button>
+                `;
+                statusEl.querySelector('#verdict-yes').onclick = () => wsSend('verdict', { accepted: true });
+                statusEl.querySelector('#verdict-no').onclick = () => wsSend('verdict', { accepted: false });
+            } else {
+                statusEl.innerHTML = msg.kind === 'objection'
+                    ? 'Itirazin rakibe iletildi - karari bekleniyor...'
+                    : `API dogrulayamadi: <strong>${escapeHtml(msg.answer)}</strong><br>Rakibin onayi bekleniyor...`;
+            }
+        }
+
+        function escapeHtml(s) {
+            const div = document.createElement('div');
+            div.textContent = s;
+            return div.innerHTML;
+        }
+
+        // ============ RESULT ============
+        function showResult(msg) {
+            showScreen('result-screen');
+            const content = $('result-content');
+
+            const myScore = msg.scores[myPlayer - 1];
+            const oppScore = msg.scores[opp() - 1];
+            const myColor = myPlayer === 1 ? '#16a34a' : '#ff4d6d';
+            const oppColor = myPlayer === 1 ? '#ff4d6d' : '#16a34a';
+            const scoreHtml = `
+                <div class="result-scoreline">
+                    Skor: <span style="color:${myColor}">Sen ${myScore}</span>
+                    <span style="color:#64748b">-</span>
+                    <span style="color:${oppColor}">${oppScore} Rakip</span>
+                </div>
+            `;
+
+            if (msg.winner) {
+                const iWon = msg.winner === myPlayer;
+                const color = msg.winner === 1 ? '#16a34a' : '#ff4d6d';
+                const viaText = msg.via === 'api' ? '(API onayladi)' : msg.via === 'opponent' ? '(Rakip onayladi)' : '';
+                // API dogruladiysa futbolcunun tam adini goster
+                let answerHtml = escapeHtml(msg.resolvedName || msg.answer || '');
+                if (msg.resolvedName && msg.answer &&
+                    msg.resolvedName.toLowerCase() !== msg.answer.toLowerCase()) {
+                    answerHtml += `<br><span style="font-size:0.85rem;color:#64748b">(yazilan: ${escapeHtml(msg.answer)})</span>`;
+                }
+                content.innerHTML = `
+                    <div class="result-title" style="color: ${color}">
+                        ${iWon ? 'Kazandin! 🎉' : 'Rakip Kazandi!'}
+                    </div>
+                    <div class="result-winner">Raund ${msg.round} - Oyuncu ${msg.winner} ${viaText}</div>
+                    <div class="result-answer">${answerHtml}</div>
+                    ${scoreHtml}
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="result-title" style="color: #ff9800">Sure Doldu / Pas!</div>
+                    <div class="result-winner">Raund ${msg.round} - Kimse puan alamadi</div>
+                    ${scoreHtml}
+                `;
+            }
+
+            $('score-p1').textContent = msg.scores[0];
+            $('score-p2').textContent = msg.scores[1];
+
+            findCommonPlayers(game.team1, game.team2);
+        }
+
+        async function findCommonPlayers(team1, team2) {
+            $('common-loading').style.display = 'block';
+            $('common-title').textContent = '';
+            $('common-list').innerHTML = '';
+
+            try {
+                const [res1, res2] = await Promise.all([
+                    fetch(`${API_BASE}/lookup_all_players.php?id=${team1.id}`),
+                    fetch(`${API_BASE}/lookup_all_players.php?id=${team2.id}`)
+                ]);
+
+                const [data1, data2] = await Promise.all([res1.json(), res2.json()]);
+
+                const players1 = data1.player || [];
+                const players2 = data2.player || [];
+
+                const commonPlayers = [];
+                const checked = new Set();
+
+                const allPlayers = [...players1, ...players2];
+
+                for (const player of allPlayers.slice(0, 30)) {
+                    if (checked.has(player.idPlayer)) continue;
+                    checked.add(player.idPlayer);
+
+                    try {
+                        const formerRes = await fetch(`${API_BASE}/lookupformerteams.php?id=${player.idPlayer}`);
+                        const formerData = await formerRes.json();
+
+                        const allTeams = [];
+                        if (player.strTeam) allTeams.push(player.strTeam.toLowerCase());
+
+                        if (formerData.formerteams) {
+                            formerData.formerteams.forEach(ft => {
+                                if (ft.strFormerTeam) {
+                                    const joinYear = parseInt((ft.strJoined || '').split('-')[0]) || 0;
+                                    const leftYear = parseInt((ft.strDeparted || '').split('-')[0]) || 9999;
+                                    if (leftYear >= 2000 || joinYear >= 2000) {
+                                        allTeams.push(ft.strFormerTeam.toLowerCase());
+                                    }
+                                }
+                            });
+                        }
+
+                        const t1 = team1.name.toLowerCase();
+                        const t2 = team2.name.toLowerCase();
+                        const inT1 = allTeams.some(t => t.includes(t1) || t1.includes(t));
+                        const inT2 = allTeams.some(t => t.includes(t2) || t2.includes(t));
+
+                        if (inT1 && inT2) {
+                            commonPlayers.push(player.strPlayer);
+                        }
+                    } catch (e) {
+                        // Hata olursa oyuncuyu atla
+                    }
+
+                    await new Promise(r => setTimeout(r, 200));
+                }
+
+                $('common-loading').style.display = 'none';
+
+                if (commonPlayers.length > 0) {
+                    $('common-title').textContent = `${team1.name} & ${team2.name} - Ortak Oyuncular:`;
+                    $('common-list').innerHTML = commonPlayers.map(p =>
+                        `<span class="common-player-chip">${escapeHtml(p)}</span>`
+                    ).join('');
+                } else {
+                    $('common-title').textContent = 'API\'de ortak oyuncu bulunamadi (sinirli veri)';
+                }
+            } catch (err) {
+                $('common-loading').style.display = 'none';
+                $('common-title').textContent = 'Ortak oyuncu arastirmasi basarisiz oldu.';
+            }
+        }
+
+        // ============ NEXT ROUND / NEW GAME ============
+        $('next-round-btn').addEventListener('click', () => wsSend('next_round'));
+        $('new-game-btn').addEventListener('click', () => wsSend('new_game'));
+
+        // ============ INIT ============
+        renderLeagueFilter();
+        renderTeamGrid();
+
+        // LAN IP'yi al (paylasim linki icin)
+        fetch('/info').then(r => r.json()).then(info => {
+            lanIp = info.lanIp;
+            httpsPort = info.httpsPort;
+            if (roomCode) {
+                $('share-link').value = buildShareLink(roomCode);
+                updateVoiceNote(roomCode);
+            }
+        }).catch(() => {});
+
+        // Linkte oda kodu varsa otomatik katil
+        const urlParams = new URLSearchParams(location.search);
+        const odaParam = urlParams.get('oda');
+        if (odaParam) {
+            connect(() => wsSend('join_room', { code: odaParam.toUpperCase() }));
+        }
+    </script>
+</body>
+</html>

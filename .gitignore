@@ -1,0 +1,6 @@
+node_modules/
+certs/
+cloudflared
+*.log
+.DS_Store
+Gemini_Generated_Image_*.png
