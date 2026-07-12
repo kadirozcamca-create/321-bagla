@@ -99,7 +99,8 @@ function createRoom() {
         answerEndsAt: null,
         answerTimeout: null,
         countdownTimeout: null,
-        pendingVerdict: null, // { player, answer }
+        pendingVerdict: null, // { player, answer, kind }
+        skipRequest: null,    // pas isteyen oyuncu (1/2) - rakip onaylamali
         lastResult: null,     // { winner, answer, via }
         emptyTimeout: null
     };
@@ -127,6 +128,7 @@ function snapshot(room) {
         players: [!!room.sockets[0], !!room.sockets[1]],
         timeLeft: room.answerEndsAt ? Math.max(0, Math.round((room.answerEndsAt - Date.now()) / 1000)) : null,
         pendingVerdict: room.pendingVerdict,
+        skipRequest: room.skipRequest,
         lastResult: room.lastResult
     };
 }
@@ -160,6 +162,7 @@ function endRound(room, winner, answer, via, resolvedName) {
     clearTimers(room);
     room.phase = 'result';
     room.pendingVerdict = null;
+    room.skipRequest = null;
     room.locked = [false, false];
     if (winner) room.scores[winner - 1]++;
     room.lastResult = { winner, answer: answer || null, via: via || null, resolvedName: resolvedName || null };
@@ -185,6 +188,7 @@ function startAnswerPhase(room) {
     room.phase = 'answer';
     room.locked = [false, false];
     room.pendingVerdict = null;
+    room.skipRequest = null;
     const DURATION = 60;
     room.answerEndsAt = Date.now() + DURATION * 1000;
     room.answerTimeout = setTimeout(() => {
@@ -332,7 +336,27 @@ wss.on('connection', (ws) => {
 
             case 'skip_round': {
                 if (!room || room.phase !== 'answer') return;
-                endRound(room, null, null, 'skip');
+                const sp = ws.player;
+                if (room.skipRequest === sp) return; // zaten istek gönderdi
+                if (room.skipRequest && room.skipRequest !== sp) {
+                    // Diğer oyuncu zaten pas istemişti: iki taraf da hemfikir
+                    endRound(room, null, null, 'skip');
+                    return;
+                }
+                room.skipRequest = sp;
+                broadcast(room, 'skip_request', { player: sp });
+                break;
+            }
+
+            case 'skip_response': {
+                if (!room || room.phase !== 'answer' || !room.skipRequest) return;
+                if (ws.player === room.skipRequest) return; // kendi isteğini onaylayamaz
+                if (msg.accepted) {
+                    endRound(room, null, null, 'skip');
+                } else {
+                    room.skipRequest = null;
+                    broadcast(room, 'skip_rejected', {});
+                }
                 break;
             }
 

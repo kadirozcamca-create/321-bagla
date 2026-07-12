@@ -873,6 +873,7 @@
             <div class="btn-center">
                 <button class="skip-btn" id="skip-btn">Bu raundi atla (kimse bilmedi)</button>
             </div>
+            <div class="verification-status checking" id="skip-confirm" style="display:none; max-width:480px; margin:10px auto 0;"></div>
         </div>
 
         <!-- RESULT SCREEN -->
@@ -1127,6 +1128,18 @@
                     renderVerdictRequest(msg);
                     break;
                 }
+                case 'skip_request': {
+                    renderSkipRequest(msg.player);
+                    break;
+                }
+                case 'skip_rejected': {
+                    resetSkipUI();
+                    const c = $('skip-confirm');
+                    c.style.display = 'block';
+                    c.textContent = 'Pas istegi reddedildi - oyun devam ediyor!';
+                    setTimeout(() => { if (c.textContent.startsWith('Pas istegi reddedildi')) { c.style.display = 'none'; c.textContent = ''; } }, 2500);
+                    break;
+                }
                 case 'round_end': {
                     stopTimer();
                     game.scores = msg.scores;
@@ -1194,6 +1207,7 @@
                         kind: state.pendingVerdict.kind || 'unverified'
                     });
                 }
+                if (state.skipRequest) renderSkipRequest(state.skipRequest);
             } else if (state.phase === 'result' && state.lastResult) {
                 showResult({ ...state.lastResult, scores: state.scores, round: state.round, team1: state.team1, team2: state.team2 });
             } else {
@@ -1421,6 +1435,7 @@
             $('opp-status').style.display = 'none';
             $('opp-waiting').style.display = 'block';
             $('mic-hint').textContent = '';
+            resetSkipUI();
             if (typeof listening !== 'undefined' && listening && recognition) recognition.stop();
 
             updateTimer();
@@ -1514,7 +1529,33 @@
             wsSend('submit_answer', { answer });
         }
 
+        // ============ PAS (iki tarafin onayi gerekir) ============
         $('skip-btn').addEventListener('click', () => wsSend('skip_round'));
+
+        function resetSkipUI() {
+            const btn = $('skip-btn');
+            btn.disabled = false;
+            btn.textContent = 'Bu raundi atla (kimse bilmedi)';
+            $('skip-confirm').style.display = 'none';
+            $('skip-confirm').innerHTML = '';
+        }
+
+        function renderSkipRequest(player) {
+            if (player === myPlayer) {
+                $('skip-btn').disabled = true;
+                $('skip-btn').textContent = 'Pas istegi gonderildi - rakibin onayi bekleniyor...';
+            } else {
+                const c = $('skip-confirm');
+                c.style.display = 'block';
+                c.innerHTML = `
+                    Rakip bu raundu pas gecmek istiyor. Onayliyor musun?<br>
+                    <button class="submit-btn p1-btn" style="margin-top:8px; padding:8px 16px; font-size:0.85rem;" id="skip-yes">Evet, Pas</button>
+                    <button class="submit-btn p2-btn" style="margin-top:8px; padding:8px 16px; font-size:0.85rem; margin-left:8px;" id="skip-no">Hayir, Devam</button>
+                `;
+                c.querySelector('#skip-yes').onclick = () => { wsSend('skip_response', { accepted: true }); c.style.display = 'none'; };
+                c.querySelector('#skip-no').onclick = () => { wsSend('skip_response', { accepted: false }); c.style.display = 'none'; };
+            }
+        }
 
         function renderAnswerStatus(msg) {
             const mine = msg.player === myPlayer;
