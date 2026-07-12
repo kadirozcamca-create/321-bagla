@@ -148,6 +148,7 @@
 
         .share-link {
             flex: 1;
+            min-width: 0;
             padding: 12px;
             border-radius: 12px;
             border: 2px solid var(--line);
@@ -454,6 +455,7 @@
 
         .answer-input {
             flex: 1;
+            min-width: 0;
             padding: 12px 15px;
             border-radius: 12px;
             border: 2px solid var(--line);
@@ -634,6 +636,20 @@
             .countdown-number { font-size: 5rem; }
             .room-code { font-size: 2rem; letter-spacing: 8px; }
             body::before, body::after { font-size: 120px; }
+
+            /* Cevap satiri: yazi alani tam genislik, mikrofon + Gonder alta gecer */
+            .answer-input-group { flex-wrap: wrap; }
+            .answer-input { flex: 1 1 100%; }
+            .mic-btn { padding: 10px 18px; }
+            .submit-btn { flex: 1; }
+
+            /* Takim isimleri uzunsa VS satiri tasmasin */
+            .answer-teams { flex-wrap: wrap; gap: 10px; }
+            .answer-team-box { padding: 10px 14px; font-size: 1rem; }
+            .answer-vs { width: 44px; height: 44px; font-size: 1rem; }
+
+            .score-board { gap: 12px; }
+            .score-item { min-width: 90px; padding: 6px 12px; }
         }
 
         /* Search */
